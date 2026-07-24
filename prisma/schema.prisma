@@ -1,0 +1,107 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  STUDENT
+  ADMIN
+  COUNSELOR
+}
+
+enum SessionStatus {
+  IN_PROGRESS
+  ANALYZING
+  COMPLETED
+  ARCHIVED
+}
+
+enum SenderType {
+  USER
+  ASSISTANT
+  SYSTEM
+}
+
+model User {
+  id            String   @id @default(uuid())
+  fullName      String
+  email         String   @unique
+  passwordHash  String
+  role          Role     @default(STUDENT)
+  academicLevel String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  sessions CounselingSession[]
+
+  @@map("users")
+}
+
+model CounselingSession {
+  id        String        @id @default(uuid())
+  userId    String
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status    SessionStatus @default(IN_PROGRESS)
+  title     String        @default("New Counseling Session")
+  summary   String?       @db.Text
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  messages       ChatMessage[]
+  profile        StudentInterestProfile?
+  recommendation CareerRecommendation[]
+
+  @@index([userId])
+  @@map("counseling_sessions")
+}
+
+model ChatMessage {
+  id         String            @id @default(uuid())
+  sessionId  String
+  session    CounselingSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  sender     SenderType
+  content    String            @db.Text
+  tokensUsed Int?              @default(0)
+  createdAt  DateTime          @default(now())
+
+  @@index([sessionId])
+  @@map("chat_messages")
+}
+
+model StudentInterestProfile {
+  id        String            @id @default(uuid())
+  sessionId String            @unique
+  session   CounselingSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  analyticalScore Int @default(5)
+  creativeScore   Int @default(5)
+  socialScore     Int @default(5)
+  technicalScore  Int @default(5)
+
+  keyInterests     String[]
+  preferredWorkEnv String?
+  createdAt        DateTime @default(now())
+
+  @@map("student_interest_profiles")
+}
+
+model CareerRecommendation {
+  id        String            @id @default(uuid())
+  sessionId String
+  session   CounselingSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  careerTitle     String
+  matchPercentage Float
+  reasoning       String   @db.Text
+  requiredSkills  String[]
+  suggestedMajors String[]
+  roadmapSteps    Json
+  createdAt       DateTime @default(now())
+
+  @@index([sessionId])
+  @@map("career_recommendations")
+}
