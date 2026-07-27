@@ -1,28 +1,42 @@
-# EduNav AI
+# EduNav AI — Smart AI-Powered Career Counseling Platform
 
-AI-powered career counselling platform — Next.js 14 (App Router) + React + PostgreSQL
-(Prisma) + Claude chatbot + NextAuth login/signup + Admin panel.
+EduNav AI is a modern, full-stack web application designed to provide interactive, personalized academic and career counseling for students. By leveraging AI language models, the platform analyzes user goals, educational backgrounds, and interests to generate structured career roadmaps and real-time guidance.
 
-## what we made
+---
 
-- **Landing page** — hero, 6-image gallery, features, 4-phase process, student reviews, CTA.
-- **Signup / Login** — email + password (NextAuth, bcrypt-hashed passwords).
-- **Student dashboard** — past sessions, "New session" button.
-- **AI Chatbot** (`/chat/[sessionId]`) — 4-phase adaptive counselling engine (Discovery →
-  Deep Probing → Skill & Work-Style → Synthesis) powered by Claude, saves every message to
-  PostgreSQL, and generates a structured career report (scores, matched careers, majors,
-  roadmap) once the conversation is deep enough.
-- **Admin panel** (`/admin`) — every registered student, their sessions, and their top
-  career match. Only accounts with role `ADMIN` can open this page.
+## Key Features
 
- prerequisites 
+- **Interactive AI Counseling:** Real-time conversational interface tailored to student queries across technology, medical, business, and creative disciplines.
+- **3D Hero Visualizations:** Interactive 3D graphics built using Three.js to deliver a modern visual experience.
+- **Scroll Reveal Animations:** Smooth micro-interactions and scroll-triggered animations powered by Framer Motion.
+- **Structured Roadmaps:** Automated career pathway generation aligned with industry trends.
+- **Fully Responsive & Dark-Themed:** Optimized for seamless performance across desktop, tablet, and mobile browsers.
 
-- Node.js 18.18 or newer — [nodejs.org](https://nodejs.org)
-- A PostgreSQL database — sabse aasan free option: [neon.tech](https://neon.tech) ya
-  [supabase.com](https://supabase.com) (dono ka free tier hai, sign up kar k connection
-  string mil jaati hai)
-- Ek Anthropic (Claude) API key — [console.anthropic.com](https://console.anthropic.com)
- 
+---
 
-- Roles teen hain: `STUDENT`, `ADMIN`, `COUNSELOR`. Kisi user ko admin banane ke liye
-  Prisma Studio (`npm run db:studio`) khol kar us user ki `role` field `ADMIN` kar dein.
+## Tech Stack
+
+- **Framework:** [Next.js](https://nextjs.org/) (App Router, React 18/19)
+- **Language:** [TypeScript](https://www.typescriptlang.org/)
+- **Styling:** [Tailwind CSS](https://tailwindcss.com/)
+- **3D & Graphics:** [Three.js](https://threejs.org/)
+- **Animations:** [Framer Motion](https://www.framer.com/motion/)
+- **AI Integration:** OpenAI API Integration
+
+---
+
+## Project Structure
+
+```text
+edunav-ai/
+├── public/                # Static assets and media files
+├── src/
+│   ├── app/               # Next.js App Router pages and layouts
+│   │   ├── chat/          # AI Counseling session route
+│   │   ├── page.tsx       # Main landing page with 3D canvas and animations
+│   │   └── layout.tsx     # Global layout configuration
+│   └── components/        # Reusable UI components
+│       └── Hero3DCanvas.tsx # Three.js 3D model component
+├── .gitignore             # Ignored files and environment variables
+├── package.json           # Project dependencies and scripts
+└── README.md              # Project documentation
