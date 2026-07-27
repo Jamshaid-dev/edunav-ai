@@ -3,98 +3,142 @@
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
 
-export default function Hero3DCanvas() {
+interface Hero3DCanvasProps {
+  scrollYProgress?: any;
+}
+
+export default function Hero3DCanvas({ scrollYProgress }: Hero3DCanvasProps) {
   const mountRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const container = mountRef.current;
-    if (!container) return;
+    const currentRef = mountRef.current;
+    if (!currentRef) return;
 
-    // 1. Scene, Camera, Renderer Setup
+    // Scene & Camera Setup
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(
-      75,
-      container.clientWidth / container.clientHeight,
+      45,
+      currentRef.clientWidth / currentRef.clientHeight,
       0.1,
       1000
     );
-    camera.position.z = 3.5;
+    camera.position.set(0, 0, 5);
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setSize(container.clientWidth, container.clientHeight);
+    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+    renderer.setSize(currentRef.clientWidth, currentRef.clientHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    container.appendChild(renderer.domElement);
+    currentRef.appendChild(renderer.domElement);
 
-    // 2. 3D Animated Sphere Geometry & Material
-    const geometry = new THREE.IcosahedronGeometry(1.6, 20);
-    const material = new THREE.MeshStandardMaterial({
-      color: 0x3b82f6,
-      wireframe: true,
-      roughness: 0.1,
+    // Master Group
+    const masterGroup = new THREE.Group();
+    scene.add(masterGroup);
+
+    // Core AI Crystal
+    const coreGeo = new THREE.IcosahedronGeometry(1.1, 2);
+    const coreMat = new THREE.MeshStandardMaterial({
+      color: 0x0284c7,
       metalness: 0.8,
+      roughness: 0.2,
     });
-    const sphere = new THREE.Mesh(geometry, material);
-    scene.add(sphere);
-
-    // Inner Glowing Core
-    const coreGeo = new THREE.SphereGeometry(0.9, 32, 32);
-    const coreMat = new THREE.MeshBasicMaterial({ color: 0x8b5cf6 });
     const core = new THREE.Mesh(coreGeo, coreMat);
-    scene.add(core);
+    masterGroup.add(core);
 
-    // 3. Lighting
-    const ambientLight = new THREE.AmbientLight(0xffffff, 1);
+    // Outer Tech Wireframe
+    const outerGeo = new THREE.IcosahedronGeometry(1.5, 1);
+    const outerMat = new THREE.MeshBasicMaterial({
+      color: 0x38bdf8,
+      wireframe: true,
+      transparent: true,
+      opacity: 0.35,
+    });
+    const outerShield = new THREE.Mesh(outerGeo, outerMat);
+    masterGroup.add(outerShield);
+
+    // Orbital Rings
+    const ring1 = new THREE.Mesh(
+      new THREE.TorusGeometry(1.9, 0.02, 16, 100),
+      new THREE.MeshBasicMaterial({ color: 0x0284c7 })
+    );
+    ring1.rotation.x = Math.PI / 3;
+    masterGroup.add(ring1);
+
+    const ring2 = new THREE.Mesh(
+      new THREE.TorusGeometry(2.2, 0.015, 16, 100),
+      new THREE.MeshBasicMaterial({ color: 0x6366f1 })
+    );
+    ring2.rotation.y = Math.PI / 4;
+    masterGroup.add(ring2);
+
+    // Lighting
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1.8);
     scene.add(ambientLight);
 
-    const pointLight = new THREE.PointLight(0x3b82f6, 3);
-    pointLight.position.set(5, 5, 5);
+    const dirLight = new THREE.DirectionalLight(0xffffff, 2);
+    dirLight.position.set(5, 5, 5);
+    scene.add(dirLight);
+
+    const pointLight = new THREE.PointLight(0x38bdf8, 3, 10);
     scene.add(pointLight);
 
-    // 4. Animation Loop
-    let animationFrameId: number;
-    let clock = new THREE.Clock();
+    // Mouse Parallax
+    let mouseX = 0;
+    let mouseY = 0;
+    const handleMouseMove = (e: MouseEvent) => {
+      mouseX = (e.clientX - window.innerWidth / 2) / (window.innerWidth / 2);
+      mouseY = (e.clientY - window.innerHeight / 2) / (window.innerHeight / 2);
+    };
+    window.addEventListener("mousemove", handleMouseMove);
+
+    // Animation Loop linked with Scroll Progress
+    let animationId: number;
+    const clock = new THREE.Clock();
 
     const animate = () => {
-      animationFrameId = requestAnimationFrame(animate);
-      const elapsedTime = clock.getElapsedTime();
+      const t = clock.getElapsedTime();
 
-      // Continuous Smooth Rotation & Pulsing
-      sphere.rotation.x = elapsedTime * 0.3;
-      sphere.rotation.y = elapsedTime * 0.4;
+      // Base idle rotations
+      core.rotation.y = t * 0.4;
+      core.rotation.x = t * 0.2;
+      outerShield.rotation.y = -t * 0.3;
+      ring1.rotation.z = t * 0.2;
+      ring2.rotation.x = t * 0.3;
 
-      const scale = 1 + Math.sin(elapsedTime * 2) * 0.05;
-      core.scale.set(scale, scale, scale);
+      // Scroll-driven extra rotation & transformations
+      const progress = scrollYProgress ? scrollYProgress.get() : 0;
+      masterGroup.rotation.y = t * 0.2 + progress * Math.PI * 4;
+      masterGroup.rotation.z = progress * Math.PI * 2;
+
+      // Gentle floating
+      masterGroup.position.y = Math.sin(t * 1.5) * 0.1;
+
+      // Smooth cursor parallax
+      masterGroup.rotation.y += (mouseX * 0.3 - masterGroup.rotation.y) * 0.05;
+      masterGroup.rotation.x += (mouseY * 0.2 - masterGroup.rotation.x) * 0.05;
 
       renderer.render(scene, camera);
+      animationId = requestAnimationFrame(animate);
     };
 
     animate();
 
-    // Responsive Resize Handler
     const handleResize = () => {
-      if (!container) return;
-      camera.aspect = container.clientWidth / container.clientHeight;
+      if (!currentRef) return;
+      camera.aspect = currentRef.clientWidth / currentRef.clientHeight;
       camera.updateProjectionMatrix();
-      renderer.setSize(container.clientWidth, container.clientHeight);
+      renderer.setSize(currentRef.clientWidth, currentRef.clientHeight);
     };
-
     window.addEventListener("resize", handleResize);
 
-    // Cleanup on Unmount
     return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("resize", handleResize);
-      cancelAnimationFrame(animationFrameId);
-      if (container.contains(renderer.domElement)) {
-        container.removeChild(renderer.domElement);
+      cancelAnimationFrame(animationId);
+      if (currentRef.contains(renderer.domElement)) {
+        currentRef.removeChild(renderer.domElement);
       }
       renderer.dispose();
     };
-  }, []);
+  }, [scrollYProgress]);
 
-  return (
-    <div
-      ref={mountRef}
-      className="h-[380px] w-full md:h-[480px] flex items-center justify-center"
-    />
-  );
+  return <div ref={mountRef} className="h-full w-full" />;
 }
